@@ -1,0 +1,6 @@
+@"
+node_modules/
+uploads/
+.env
+files.zip
+"@ | Set-Content -Encoding utf8 .gitignore
