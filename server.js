@@ -18,6 +18,17 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
+
+app.set('trust proxy', 1);
+if (process.env.LAB_GATE_USER) {
+  app.use((req, res, next) => {
+    const h = req.headers.authorization || '';
+    const [u, p] = Buffer.from(h.split(' ')[1] || '', 'base64').toString().split(':');
+    if (u === process.env.LAB_GATE_USER && p === process.env.LAB_GATE_PASS) return next();
+    res.set('WWW-Authenticate', 'Basic realm="Lab"').status(401).send('Auth required');
+  });
+}
+
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -311,5 +322,6 @@ app.get('/api/users', requireLoginApi, (req, res) =>
 // ---------------------------------------------------------------------------
 // START: bind ke loopback saja
 // ---------------------------------------------------------------------------
-app.listen(3000, '127.0.0.1', () =>
-  console.log('Lab aktif di http://127.0.0.1:3000  (HANYA lokal, aplikasi sengaja rentan)'));
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => console.log(`Lab aktif di ${HOST}:${PORT}`));
